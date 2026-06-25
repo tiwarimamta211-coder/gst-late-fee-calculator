@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GST Late Fee &amp; Interest Calculator | IncomeAIHub</title>
+<meta name="description" content="Free GST Late Fee and Interest Calculator for GSTR-3B, GSTR-1 &amp; GSTR-9. Calculate penalty, interest @18% p.a., turnover-based caps and export report.">
+
+<!-- Google AdSense (replace with your client ID) -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&amp;family=Rajdhani:wght@400;500;600;700&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+:root{
+  --bg-0:#05070d;
+  --bg-1:#0a0f1c;
+  --bg-2:#0e1526;
+  --panel:#0c1322;
+  --cyan:#00f6ff;
+  --cyan-dim:#0891a8;
+  --purple:#b34dff;
+  --green:#39ff8f;
+  --red:#ff3b5c;
+  --amber:#ffb648;
+  --text:#d7e6ff;
+  --text-dim:#7e93b8;
+  --border:#1c2c47;
+  --glow-cyan:0 0 18px rgba(0,246,255,.35);
+  --glow-purple:0 0 18px rgba(179,77,255,.3);
+  --glow-green:0 0 18px rgba(57,255,143,.3);
+  --glow-red:0 0 18px rgba(255,59,92,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:
+    radial-gradient(circle at 15% 0%, rgba(179,77,255,.10), transparent 45%),
+    radial-gradient(circle at 90% 10%, rgba(0,246,255,.10), transparent 40%),
+    linear-gradient(180deg,var(--bg-0),var(--bg-1) 40%,var(--bg-0));
+  background-attachment:fixed;
+  color:var(--text);
+  font-family:'Rajdhani',sans-serif;
+  min-height:100vh;
+  padding-bottom:40px;
+}
+.scanlines{
+  position:fixed;inset:0;pointer-events:none;z-index:1;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0px,rgba(255,255,255,.012) 1px,transparent 1px,transparent 3px);
+  mix-blend-mode:overlay;
+}
+.container{max-width:1100px;margin:0 auto;padding:0 18px;position:relative;z-index:2;}
+
+/* Header */
+header{padding:28px 0 14px;text-align:center;}
+.brand{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.18em;
+  color:var(--cyan-dim);text-transform:uppercase;margin-bottom:10px;
+}
+.brand::before,.brand::after{content:'';width:24px;height:1px;background:var(--cyan-dim);}
+h1{
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:clamp(1.6rem,5vw,2.6rem);
+  background:linear-gradient(90deg,var(--cyan),var(--purple));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 30px rgba(0,246,255,.25);
+  letter-spacing:.02em;
+}
+.subtitle{color:var(--text-dim);font-size:.95rem;margin-top:8px;font-weight:500;}
+.lang-toggle{
+  display:inline-flex;margin-top:16px;border:1px solid var(--border);
+  border-radius:30px;overflow:hidden;background:rgba(255,255,255,.02);
+}
+.lang-toggle button{
+  font-family:'Share Tech Mono',monospace;font-size:.78rem;padding:7px 18px;
+  background:transparent;border:none;color:var(--text-dim);cursor:pointer;
+  transition:.2s;
+}
+.lang-toggle button.active{background:var(--cyan);color:#021014;font-weight:700;}
+
+/* Ad slot */
+.ad-slot{
+  margin:18px auto;max-width:1100px;min-height:90px;
+  border:1px dashed var(--border);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:.7rem;
+  letter-spacing:.1em;background:rgba(255,255,255,.015);
+}
+
+/* Card */
+.card{
+  background:linear-gradient(160deg,rgba(15,22,40,.9),rgba(8,12,22,.9));
+  border:1px solid var(--border);border-radius:16px;
+  padding:26px;margin-bottom:22px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.02) inset, 0 20px 50px -20px rgba(0,0,0,.6);
+  position:relative;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--cyan),var(--purple),var(--green));
+  opacity:.7;
+}
+.card-title{
+  font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;
+  color:var(--cyan);letter-spacing:.05em;margin-bottom:18px;
+  display:flex;align-items:center;gap:10px;
+}
+.card-title .num{
+  width:26px;height:26px;border-radius:6px;border:1px solid var(--cyan);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:.8rem;color:var(--cyan);box-shadow:var(--glow-cyan);flex-shrink:0;
+}
+
+/* Form grid */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;}
+@media(max-width:680px){.grid{grid-template-columns:1fr;}}
+.field label{
+  display:block;font-size:.78rem;color:var(--text-dim);
+  text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px;font-weight:600;
+}
+.field label .hint{color:var(--purple);font-size:.7rem;text-transform:none;letter-spacing:0;display:block;margin-top:3px;font-weight:400;}
+input[type="text"],input[type="number"],input[type="date"],select{
+  width:100%;padding:11px 13px;background:var(--panel);
+  border:1px solid var(--border);border-radius:8px;color:var(--text);
+  font-family:'Share Tech Mono',monospace;font-size:.92rem;
+  transition:.2s;outline:none;
+}
+input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,246,255,.12);}
+select{cursor:pointer;}
+.radio-row{display:flex;gap:10px;flex-wrap:wrap;}
+.radio-pill{
+  flex:1;min-width:130px;text-align:center;padding:10px 8px;border:1px solid var(--border);
+  border-radius:8px;cursor:pointer;font-size:.82rem;color:var(--text-dim);
+  background:var(--panel);transition:.2s;user-select:none;font-weight:600;
+}
+.radio-pill.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,246,255,.07);box-shadow:var(--glow-cyan);}
+.radio-pill input{display:none;}
+
+.calc-btn{
+  width:100%;margin-top:22px;padding:15px;border:none;border-radius:10px;
+  background:linear-gradient(90deg,var(--cyan),var(--purple));
+  color:#03070f;font-family:'Orbitron',sans-serif;font-weight:700;
+  font-size:1rem;letter-spacing:.05em;cursor:pointer;
+  box-shadow:0 0 25px rgba(0,246,255,.3);transition:.2s;
+}
+.calc-btn:hover{transform:translateY(-1px);box-shadow:0 0 35px rgba(0,246,255,.45);}
+.calc-btn:active{transform:translateY(0);}
+
+/* Results */
+#resultsCard{display:none;}
+.result-summary{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;
+}
+@media(max-width:680px){.result-summary{grid-template-columns:1fr;}}
+.stat-box{
+  background:var(--panel);border:1px solid var(--border);border-radius:12px;
+  padding:18px;text-align:center;position:relative;
+}
+.stat-box .label{font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+.stat-box .value{font-family:'Orbitron',sans-serif;font-size:1.5rem;font-weight:700;}
+.stat-box.fee .value{color:var(--amber);text-shadow:0 0 18px rgba(255,182,72,.35);}
+.stat-box.interest .value{color:var(--purple);text-shadow:var(--glow-purple);}
+.stat-box.total{border-color:var(--cyan);box-shadow:var(--glow-cyan);}
+.stat-box.total .value{color:var(--cyan);text-shadow:var(--glow-cyan);}
+
+.breakdown-table{width:100%;border-collapse:collapse;margin-bottom:18px;font-size:.88rem;}
+.breakdown-table th,.breakdown-table td{
+  padding:11px 12px;text-align:left;border-bottom:1px solid var(--border);
+}
+.breakdown-table th{
+  color:var(--cyan-dim);text-transform:uppercase;font-size:.72rem;letter-spacing:.06em;
+  font-family:'Share Tech Mono',monospace;
+}
+.breakdown-table td{font-family:'Share Tech Mono',monospace;color:var(--text);}
+.breakdown-table tr:last-child td{border-bottom:none;}
+.breakdown-table td.num,.breakdown-table th.num{text-align:right;}
+.row-total td{font-weight:700;color:var(--green);border-top:1px solid var(--border);}
+
+.cap-banner{
+  display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:8px;
+  background:rgba(255,182,72,.08);border:1px solid rgba(255,182,72,.3);
+  color:var(--amber);font-size:.85rem;margin-bottom:18px;font-weight:600;
+}
+.cap-banner.ok{background:rgba(57,255,143,.07);border-color:rgba(57,255,143,.3);color:var(--green);}
+
+.action-row{display:flex;gap:12px;flex-wrap:wrap;}
+.btn-secondary{
+  flex:1;min-width:150px;padding:12px;border-radius:8px;cursor:pointer;
+  font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.9rem;letter-spacing:.03em;
+  border:1px solid var(--border);background:var(--panel);color:var(--text);transition:.2s;
+}
+.btn-secondary:hover{border-color:var(--green);color:var(--green);box-shadow:var(--glow-green);}
+.btn-secondary.purple:hover{border-color:var(--purple);color:var(--purple);box-shadow:var(--glow-purple);}
+
+/* Disclaimer */
+.disclaimer{
+  font-size:.78rem;color:var(--text-dim);border-left:2px solid var(--cyan-dim);
+  padding-left:12px;margin-top:18px;line-height:1.6;
+}
+
+/* Hindi guide */
+.guide-card{display:none;}
+.guide-card.show{display:block;}
+.guide-card h3{font-family:'Orbitron',sans-serif;color:var(--purple);font-size:.95rem;margin:18px 0 8px;}
+.guide-card h3:first-child{margin-top:0;}
+.guide-card p,.guide-card li{font-size:.92rem;line-height:1.7;color:var(--text);}
+.guide-card ul{padding-left:20px;margin-bottom:10px;}
+.guide-card ol{padding-left:20px;margin-bottom:10px;}
+
+footer{text-align:center;padding:30px 0 10px;color:var(--text-dim);font-size:.78rem;font-family:'Share Tech Mono',monospace;}
+footer a{color:var(--cyan-dim);text-decoration:none;}
+
+.flicker{animation:flick 4s infinite;}
+@keyframes flick{0%,97%,100%{opacity:1;}98%{opacity:.85;}99%{opacity:1;}}
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+
+<div class="container">
+
+  <header>
+    <div class="brand">IncomeAIHub // Tax Utilities</div>
+    <h1 class="flicker">GST LATE FEE &amp; INTEREST CALCULATOR</h1>
+    <p class="subtitle">Calculate Section 47 late fee + Section 50 interest for GSTR-3B, GSTR-1 &amp; GSTR-9 — instantly, accurately, free.</p>
+    <div class="lang-toggle">
+      <button id="btnEN" class="active" onclick="setLang('en')">ENGLISH</button>
+      <button id="btnHI" onclick="setLang('hi')">हिंदी</button>
+    </div>
+  </header>
+
+  <div class="ad-slot">AD SLOT — 728x90 / Responsive (AdSense)</div>
+
+  <!-- INPUT CARD -->
+  <div class="card">
+    <div class="card-title"><span class="num">1</span> RETURN DETAILS</div>
+
+    <div class="grid">
+      <div class="field">
+        <label>GST Return Type</label>
+        <select id="returnType" onchange="updateReturnType()">
+          <option value="gstr3b">GSTR-3B (Monthly Summary Return)</option>
+          <option value="gstr1">GSTR-1 (Outward Supplies)</option>
+          <option value="gstr9">GSTR-9 (Annual Return)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Filing Type</label>
+        <div class="radio-row">
+          <label class="radio-pill active" id="pillRegular">
+            <input type="radio" name="filingType" value="regular" checked onclick="setFilingType('regular')"> Regular Return
+          </label>
+          <label class="radio-pill" id="pillNil">
+            <input type="radio" name="filingType" value="nil" onclick="setFilingType('nil')"> NIL Return
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Original Due Date</label>
+        <input type="date" id="dueDate">
+      </div>
+
+      <div class="field">
+        <label>Actual / Expected Filing Date</label>
+        <input type="date" id="filingDate">
+      </div>
+
+      <div class="field">
+        <label>Manual Delay Days <span class="hint">(optional — overrides dates above if filled)</span></label>
+        <input type="number" id="manualDays" min="0" placeholder="e.g. 45">
+      </div>
+
+      <div class="field">
+        <label>Net Tax Liability (₹) <span class="hint">for interest calculation @18% p.a.</span></label>
+        <input type="number" id="taxLiability" min="0" placeholder="e.g. 75000">
+      </div>
+
+      <div class="field" id="turnoverField">
+        <label>Annual Turnover (₹) <span class="hint">used for late-fee cap slab</span></label>
+        <input type="number" id="turnover" min="0" placeholder="e.g. 3000000">
+      </div>
+
+      <div class="field" id="interestRateField">
+        <label>Interest Rate (% p.a.)</label>
+        <select id="interestRate">
+          <option value="18">18% — Standard delayed payment</option>
+          <option value="24">24% — Excess ITC claimed / reduced output tax</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calculate()">⚡ CALCULATE LATE FEE &amp; INTEREST</button>
+  </div>
+
+  <!-- RESULTS CARD -->
+  <div class="card" id="resultsCard">
+    <div class="card-title"><span class="num">2</span> CALCULATION RESULT</div>
+
+    <div id="capBanner"></div>
+
+    <div class="result-summary">
+      <div class="stat-box fee">
+        <div class="label">Late Fee (Sec 47)</div>
+        <div class="value" id="outFee">₹0</div>
+      </div>
+      <div class="stat-box interest">
+        <div class="label">Interest (Sec 50)</div>
+        <div class="value" id="outInterest">₹0</div>
+      </div>
+      <div class="stat-box total">
+        <div class="label">Total Payable</div>
+        <div class="value" id="outTotal">₹0</div>
+      </div>
+    </div>
+
+    <table class="breakdown-table">
+      <tr><th>Particulars</th><th class="num">Amount</th></tr>
+      <tbody id="breakdownBody"></tbody>
+    </table>
+
+    <div class="ad-slot" style="min-height:60px;">AD SLOT — In-content (AdSense)</div>
+
+    <div class="action-row">
+      <button class="btn-secondary" onclick="exportPDF()">📄 EXPORT PDF REPORT</button>
+      <button class="btn-secondary purple" onclick="exportCSV()">📊 EXPORT CSV</button>
+      <button class="btn-secondary" onclick="window.print()">🖨️ PRINT</button>
+    </div>
+
+    <p class="disclaimer" id="disclaimerText">
+      ⚠ This is an estimate for planning purposes only based on standard GST rules (Notifications 19/2021, 20/2021, 21/2021 &amp; 07/2023). Late fee is automatically computed and locked by the GST portal at the time of filing and cannot be altered manually. Amnesty schemes, if notified by CBIC for your filing period, may override these standard rates. Please verify the final amount on the GST portal or consult a Chartered Accountant before payment.
+    </p>
+  </div>
+
+  <div class="ad-slot">AD SLOT — 300x250 / Responsive (AdSense)</div>
+
+  <!-- ENGLISH GUIDE -->
+  <div class="card guide-card show" id="guideEN">
+    <div class="card-title"><span class="num">i</span> HOW THIS CALCULATOR WORKS</div>
+    <h3>Late Fee Rules</h3>
+    <ul>
+      <li><strong>GSTR-3B / GSTR-1 Regular:</strong> ₹50/day (₹25 CGST + ₹25 SGST), capped by turnover slab (₹2,000 / ₹5,000 / ₹10,000).</li>
+      <li><strong>GSTR-3B / GSTR-1 NIL:</strong> ₹20/day (₹10 CGST + ₹10 SGST), capped at ₹500.</li>
+      <li><strong>GSTR-9 (Annual):</strong> ₹200/day (₹100+₹100) tiered by AATO, capped at 0.04%–0.5% of turnover.</li>
+    </ul>
+    <h3>Interest Rule</h3>
+    <p>Interest is charged at 18% per annum (or 24% for excess ITC/reduced liability cases) on the net cash tax liability, calculated daily from the day after the due date till the actual payment date.</p>
+    <h3>How To Use</h3>
+    <ol>
+      <li>Select your return type and filing type (Regular/NIL).</li>
+      <li>Enter due date and filing date — or simply type delay days manually.</li>
+      <li>Enter your net tax liability and annual turnover.</li>
+      <li>Click Calculate to see the late fee, interest, and total payable instantly.</li>
+      <li>Export the report as PDF or CSV for your records.</li>
+    </ol>
+  </div>
+
+  <!-- HINDI GUIDE -->
+  <div class="card guide-card" id="guideHI">
+    <div class="card-title"><span class="num">i</span> उपयोग गाइड (हिंदी)</div>
+    <h3>लेट फीस के नियम</h3>
+    <ul>
+      <li><strong>GSTR-3B / GSTR-1 (सामान्य):</strong> प्रतिदिन ₹50 (₹25 CGST + ₹25 SGST), टर्नओवर के अनुसार अधिकतम सीमा ₹2,000 / ₹5,000 / ₹10,000।</li>
+      <li><strong>NIL रिटर्न:</strong> प्रतिदिन ₹20 (₹10 + ₹10), अधिकतम ₹500।</li>
+      <li><strong>GSTR-9 (वार्षिक):</strong> प्रतिदिन ₹200, टर्नओवर के अनुसार सीमा 0.04%–0.5%।</li>
+    </ul>
+    <h3>इंटरेस्ट (ब्याज) का नियम</h3>
+    <p>देरी से भुगतान पर 18% प्रति वर्ष (या अधिक ITC क्लेम की स्थिति में 24%) की दर से ब्याज लगाया जाता है। यह ड्यू डेट के अगले दिन से भुगतान की तारीख तक की नेट टैक्स देयता पर रोज़ाना आधार पर कैलकुलेट होता है।</p>
+    <h3>इस्तेमाल कैसे करें</h3>
+    <ol>
+      <li>अपना रिटर्न टाइप और फाइलिंग टाइप (सामान्य/NIL) चुनें।</li>
+      <li>ड्यू डेट और फाइलिंग डेट डालें — या सीधे डिले डेज़ टाइप करें।</li>
+      <li>अपनी नेट टैक्स देयता और सालाना टर्नओवर भरें।</li>
+      <li>कैलकुलेट बटन दबाएं — लेट फीस, ब्याज और कुल देय राशि तुरंत दिखेगी।</li>
+      <li>रिपोर्ट को PDF या CSV में एक्सपोर्ट कर अपने रिकॉर्ड के लिए सेव करें।</li>
+    </ol>
+  </div>
+
+  <footer>
+    IncomeAIHub.com — Free AI-Powered Tools for Indian Businesses &amp; Freelancers<br>
+    For estimation only. Always verify on <a href="https://www.gst.gov.in" target="_blank" rel="noopener">gst.gov.in</a> or consult your CA.
+  </footer>
+
+</div>
+
+<script>
+let currentLang = 'en';
+let filingType = 'regular';
+let lastResult = null;
+
+function setLang(lang){
+  currentLang = lang;
+  document.getElementById('btnEN').classList.toggle('active', lang==='en');
+  document.getElementById('btnHI').classList.toggle('active', lang==='hi');
+  document.getElementById('guideEN').classList.toggle('show', lang==='en');
+  document.getElementById('guideHI').classList.toggle('show', lang==='hi');
+
+  const disc = document.getElementById('disclaimerText');
+  if(lang==='hi'){
+    disc.innerHTML = '⚠ यह केवल अनुमान/प्लानिंग के लिए है, मानक GST नियमों (Notification 19/2021, 20/2021, 21/2021 व 07/2023) के आधार पर। अंतिम लेट फीस GST पोर्टल द्वारा फाइलिंग के समय स्वतः कैलकुलेट होकर लॉक हो जाती है, जिसे मैन्युअली बदला नहीं जा सकता। यदि आपकी फाइलिंग अवधि के लिए CBIC द्वारा कोई एमनेस्टी स्कीम लागू है, तो वह इन दरों से ऊपर हो सकती है। कृपया भुगतान से पहले GST पोर्टल पर अंतिम राशि सत्यापित करें या अपने CA से सलाह लें।';
+  } else {
+    disc.innerHTML = '⚠ This is an estimate for planning purposes only based on standard GST rules (Notifications 19/2021, 20/2021, 21/2021 &amp; 07/2023). Late fee is automatically computed and locked by the GST portal at the time of filing and cannot be altered manually. Amnesty schemes, if notified by CBIC for your filing period, may override these standard rates. Please verify the final amount on the GST portal or consult a Chartered Accountant before payment.';
+  }
+  if(lastResult) renderResults(lastResult);
+}
+
+function setFilingType(type){
+  filingType = type;
+  document.getElementById('pillRegular').classList.toggle('active', type==='regular');
+  document.getElementById('pillNil').classList.toggle('active', type==='nil');
+}
+
+function updateReturnType(){
+  // placeholder for future per-return-type field tweaks
+}
+
+function fmtINR(num){
+  num = Math.round(num);
+  return '₹' + num.toLocaleString('en-IN');
+}
+
+function getDelayDays(){
+  const manual = document.getElementById('manualDays').value;
+  if(manual !== '' && !isNaN(manual) && Number(manual) >= 0){
+    return Math.floor(Number(manual));
+  }
+  const due = document.getElementById('dueDate').value;
+  const filed = document.getElementById('filingDate').value;
+  if(!due || !filed) return null;
+  const d1 = new Date(due);
+  const d2 = new Date(filed);
+  const diff = Math.floor((d2 - d1) / (1000*60*60*24));
+  return diff > 0 ? diff : 0;
+}
+
+function getLateFeeCap(returnType, filingType, turnover){
+  // Returns {perDayTotal, capTotal}
+  if(filingType === 'nil'){
+    if(returnType === 'gstr9'){
+      return { perDay: 50, cap: turnover * 0.0004 }; // approx min slab for NIL annual, rarely used
+    }
+    return { perDay: 20, cap: 500 };
+  }
+  if(returnType === 'gstr9'){
+    let perDay = 50, capPct = 0.0004;
+    if(turnover > 200000000){ perDay = 200; capPct = 0.0025; } // >20cr
+    else if(turnover > 50000000){ perDay = 100; capPct = 0.0004; } // 5-20cr (approx tiered)
+    else { perDay = 50; capPct = 0.0004; } // <=5cr
+    return { perDay, cap: turnover * capPct };
+  }
+  // GSTR-3B / GSTR-1 regular
+  let cap = 10000;
+  if(turnover <= 15000000) cap = 2000;        // up to 1.5cr
+  else if(turnover <= 50000000) cap = 5000;    // 1.5cr - 5cr
+  else cap = 10000;                            // > 5cr
+  return { perDay: 50, cap: cap };
+}
+
+function calculate(){
+  const days = getDelayDays();
+  if(days === null){
+    alert(currentLang==='hi' ? 'कृपया ड्यू डेट और फाइलिंग डेट डालें, या मैन्युअल डिले डेज़ भरें।' : 'Please enter due date & filing date, or manual delay days.');
+    return;
+  }
+
+  const returnType = document.getElementById('returnType').value;
+  const taxLiability = Number(document.getElementById('taxLiability').value) || 0;
+  const turnover = Number(document.getElementById('turnover').value) || 0;
+  const rate = Number(document.getElementById('interestRate').value) || 18;
+
+  const { perDay, cap } = getLateFeeCap(returnType, filingType, turnover);
+  let rawFee = days * perDay;
+  let feeCapped = false;
+  let totalFee = rawFee;
+  if(rawFee > cap){
+    totalFee = cap;
+    feeCapped = true;
+  }
+  const cgstFee = totalFee / 2;
+  const sgstFee = totalFee / 2;
+
+  // Interest: simple daily basis, no cap
+  const interest = (taxLiability * (rate/100) * days) / 365;
+
+  const total = totalFee + interest;
+
+  lastResult = {
+    days, returnType, filingType, taxLiability, turnover, rate,
+    perDay, cap, rawFee, totalFee, feeCapped, cgstFee, sgstFee, interest, total
+  };
+
+  renderResults(lastResult);
+  document.getElementById('resultsCard').style.display = 'block';
+  document.getElementById('resultsCard').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function renderResults(r){
+  const hi = currentLang === 'hi';
+
+  document.getElementById('outFee').textContent = fmtINR(r.totalFee);
+  document.getElementById('outInterest').textContent = fmtINR(r.interest);
+  document.getElementById('outTotal').textContent = fmtINR(r.total);
+
+  const cb = document.getElementById('capBanner');
+  if(r.feeCapped){
+    cb.innerHTML = `<div class="cap-banner">⚠ ${hi ? 'अधिकतम सीमा लागू: कैलकुलेटेड फीस सीमा से अधिक थी, इसलिए कैप राशि लागू की गई है।' : 'Maximum cap applied: calculated fee exceeded the slab cap, so the capped amount has been used.'}</div>`;
+  } else {
+    cb.innerHTML = `<div class="cap-banner ok">✓ ${hi ? 'फीस अधिकतम सीमा के अंदर है।' : 'Fee is within the maximum cap for your turnover slab.'}</div>`;
+  }
+
+  const returnLabels = {
+    gstr3b: 'GSTR-3B', gstr1: 'GSTR-1', gstr9: 'GSTR-9'
+  };
+
+  const rows = [
+    [hi?'रिटर्न टाइप':'Return Type', returnLabels[r.returnType] + (r.filingType==='nil' ? (hi?' (NIL)':' (NIL)') : '')],
+    [hi?'देरी के दिन':'Delay Days', r.days + ' ' + (hi?'दिन':'days')],
+    [hi?'प्रतिदिन दर':'Rate Per Day', fmtINR(r.perDay) + '/' + (hi?'दिन':'day')],
+    [hi?'कुल लेट फीस (कैप से पहले)':'Raw Late Fee (before cap)', fmtINR(r.rawFee)],
+    [hi?'अधिकतम सीमा (कैप)':'Maximum Cap', fmtINR(r.cap)],
+    [hi?'अंतिम लेट फीस':'Final Late Fee', fmtINR(r.totalFee)],
+    [hi?'— CGST हिस्सा':'— CGST Share', fmtINR(r.cgstFee)],
+    [hi?'— SGST हिस्सा':'— SGST Share', fmtINR(r.sgstFee)],
+    [hi?'टैक्स देयता':'Net Tax Liability', fmtINR(r.taxLiability)],
+    [hi?'ब्याज दर':'Interest Rate', r.rate + '% p.a.'],
+    [hi?'कुल ब्याज':'Interest Amount', fmtINR(r.interest)],
+  ];
+
+  let html = '';
+  rows.forEach(row => {
+    html += `<tr><td>${row[0]}</td><td class="num">${row[1]}</td></tr>`;
+  });
+  html += `<tr class="row-total"><td>${hi?'कुल देय राशि':'TOTAL PAYABLE'}</td><td class="num">${fmtINR(r.total)}</td></tr>`;
+  document.getElementById('breakdownBody').innerHTML = html;
+}
+
+function exportCSV(){
+  if(!lastResult) return;
+  const r = lastResult;
+  const hi = currentLang === 'hi';
+  let csv = 'Particulars,Amount\n';
+  csv += `Return Type,${r.returnType.toUpperCase()} ${r.filingType==='nil'?'(NIL)':''}\n`;
+  csv += `Delay Days,${r.days}\n`;
+  csv += `Rate Per Day,${r.perDay}\n`;
+  csv += `Raw Late Fee,${r.rawFee}\n`;
+  csv += `Maximum Cap,${r.cap}\n`;
+  csv += `Final Late Fee,${r.totalFee}\n`;
+  csv += `CGST Share,${r.cgstFee}\n`;
+  csv += `SGST Share,${r.sgstFee}\n`;
+  csv += `Net Tax Liability,${r.taxLiability}\n`;
+  csv += `Interest Rate,${r.rate}%\n`;
+  csv += `Interest Amount,${r.interest.toFixed(2)}\n`;
+  csv += `TOTAL PAYABLE,${r.total.toFixed(2)}\n`;
+
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'GST_Late_Fee_Report.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportPDF(){
+  if(!lastResult) return;
+  const r = lastResult;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFillColor(10,15,28);
+  doc.rect(0,0,210,30,'F');
+  doc.setTextColor(0,246,255);
+  doc.setFontSize(18);
+  doc.text('GST Late Fee & Interest Report', 14, 18);
+
+  doc.setTextColor(40,40,40);
+  doc.setFontSize(10);
+  doc.text('Generated by IncomeAIHub.com — ' + new Date().toLocaleDateString('en-IN'), 14, 38);
+
+  const returnLabels = { gstr3b: 'GSTR-3B', gstr1: 'GSTR-1', gstr9: 'GSTR-9' };
+  let y = 50;
+  const line = (label, val) => {
+    doc.setFontSize(11);
+    doc.text(label, 14, y);
+    doc.text(String(val), 140, y);
+    y += 9;
+  };
+
+  doc.setFontSize(13);
+  doc.setTextColor(0,0,0);
+  doc.text('Calculation Summary', 14, y); y += 10;
+  doc.setDrawColor(200,200,200);
+  doc.line(14, y-4, 196, y-4);
+
+  line('Return Type:', returnLabels[r.returnType] + (r.filingType==='nil' ? ' (NIL)' : ' (Regular)'));
+  line('Delay Days:', r.days + ' days');
+  line('Rate per day:', 'Rs. ' + r.perDay);
+  line('Raw Late Fee (before cap):', 'Rs. ' + Math.round(r.rawFee).toLocaleString('en-IN'));
+  line('Maximum Cap (turnover slab):', 'Rs. ' + Math.round(r.cap).toLocaleString('en-IN'));
+  line('Final Late Fee:', 'Rs. ' + Math.round(r.totalFee).toLocaleString('en-IN'));
+  line('  - CGST Share:', 'Rs. ' + Math.round(r.cgstFee).toLocaleString('en-IN'));
+  line('  - SGST Share:', 'Rs. ' + Math.round(r.sgstFee).toLocaleString('en-IN'));
+  line('Net Tax Liability:', 'Rs. ' + Math.round(r.taxLiability).toLocaleString('en-IN'));
+  line('Interest Rate:', r.rate + '% per annum');
+  line('Interest Amount:', 'Rs. ' + Math.round(r.interest).toLocaleString('en-IN'));
+
+  y += 4;
+  doc.setDrawColor(0,246,255);
+  doc.line(14, y, 196, y);
+  y += 10;
+  doc.setFontSize(14);
+  doc.setTextColor(0,130,150);
+  doc.text('TOTAL PAYABLE:  Rs. ' + Math.round(r.total).toLocaleString('en-IN'), 14, y);
+
+  y += 20;
+  doc.setFontSize(9);
+  doc.setTextColor(120,120,120);
+  const disclaimer = 'Disclaimer: This is an estimate for planning purposes based on standard GST rules. The GST portal auto-calculates and locks the final late fee at filing time. Please verify on gst.gov.in or consult a CA before payment.';
+  const split = doc.splitTextToSize(disclaimer, 182);
+  doc.text(split, 14, y);
+
+  doc.save('GST_Late_Fee_Report.pdf');
+}
+
+// set default dates
+(function(){
+  const today = new Date();
+  document.getElementById('filingDate').valueAsDate = today;
+  const due = new Date(today);
+  due.setDate(due.getDate() - 30);
+  document.getElementById('dueDate').valueAsDate = due;
+})();
+</script>
+
+</body>
+</html>
